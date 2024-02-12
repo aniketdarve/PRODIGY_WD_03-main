@@ -1,91 +1,67 @@
-let currentPlayer = 'X';
-let board = ['', '', '', '', '', '', '', '', ''];
-let gameActive = true;
-let twoPlayerMode = true;
+console.log("Welcome to Tic Tac Toe")
+let music = new Audio("music.mp3")
+let audioTurn = new Audio("ting.mp3")
+let gameover = new Audio("gameover.mp3")
+let turn = "X"
+let isgameover = false;
 
-function handleCellClick(index) {
-    if (!gameActive || board[index] !== '') return;
+// Function to change the turn
+const changeTurn = ()=>{
+    return turn === "X"? "0": "X"
+}
 
-    board[index] = currentPlayer;
-    updateBoard();
-    
-    if (checkWinner()) {
-        endGame(`Player ${currentPlayer} wins!`);
-    } else if (board.every(cell => cell !== '')) {
-        endGame('It\'s a tie!');
-    } else {
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-
-        if (!twoPlayerMode && currentPlayer === 'O') {
-            // AI makes a move after a short delay
-            setTimeout(makeAIMove, 500);
+// Function to check for a win
+const checkWin = ()=>{
+    let boxtext = document.getElementsByClassName('boxtext');
+    let wins = [
+        [0, 1, 2, 5, 5, 0],
+        [3, 4, 5, 5, 15, 0],
+        [6, 7, 8, 5, 25, 0],
+        [0, 3, 6, -5, 15, 90],
+        [1, 4, 7, 5, 15, 90],
+        [2, 5, 8, 15, 15, 90],
+        [0, 4, 8, 5, 15, 45],
+        [2, 4, 6, 5, 15, 135],
+    ]
+    wins.forEach(e =>{
+        if((boxtext[e[0]].innerText === boxtext[e[1]].innerText) && (boxtext[e[2]].innerText === boxtext[e[1]].innerText) && (boxtext[e[0]].innerText !== "") ){
+            document.querySelector('.info').innerText = boxtext[e[0]].innerText + " Won"
+            isgameover = true
+            document.querySelector('.imgbox').getElementsByTagName('img')[0].style.width = "200px";
+            document.querySelector(".line").style.transform = `translate(${e[3]}vw, ${e[4]}vw) rotate(${e[5]}deg)`
+            document.querySelector(".line").style.width = "20vw";
         }
-    }
+    })
 }
 
-function makeAIMove() {
-    const emptyCells = board.reduce((acc, cell, index) => {
-        if (cell === '') acc.push(index);
-        return acc;
-    }, []);
-
-    if (emptyCells.length > 0) {
-        const randomIndex = Math.floor(Math.random() * emptyCells.length);
-        const aiMove = emptyCells[randomIndex];
-        board[aiMove] = 'O';
-        updateBoard();
-
-        if (checkWinner()) {
-            endGame('AI wins!');
-        } else if (board.every(cell => cell !== '')) {
-            endGame('It\'s a tie!');
-        } else {
-            currentPlayer = 'X';
-            updateBoard();  // Update the board after AI move to reflect the change
+// Game Logic
+// music.play()
+let boxes = document.getElementsByClassName("box");
+Array.from(boxes).forEach(element =>{
+    let boxtext = element.querySelector('.boxtext');
+    element.addEventListener('click', ()=>{
+        if(boxtext.innerText === ''){
+            boxtext.innerText = turn;
+            turn = changeTurn();
+            audioTurn.play();
+            checkWin();
+            if (!isgameover){
+                document.getElementsByClassName("info")[0].innerText  = "Turn for " + turn;
+            } 
         }
-    }
-}
+    })
+})
 
-
-
-function endGame(message) {
-    gameActive = false;
-    document.getElementById('status').innerText = message;
-}
-
-function updateBoard() {
-    document.getElementById('status').innerText = `Player ${currentPlayer}'s turn`;
-
-    for (let i = 0; i < 9; i++) {
-        document.getElementById(`cell-${i}`).innerText = board[i];
-    }
-}
-
-function resetGame() {
-    currentPlayer = 'X';
-    board = ['', '', '', '', '', '', '', '', ''];
-    gameActive = true;
-
-    document.getElementById('status').innerText = 'Player X\'s turn';
-
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach((cell, index) => {
-        cell.innerText = '';
+// Add onclick listener to reset button
+reset.addEventListener('click', ()=>{
+    let boxtexts = document.querySelectorAll('.boxtext');
+    Array.from(boxtexts).forEach(element => {
+        element.innerText = ""
     });
-}
+    turn = "X"; 
+    isgameover = false
+    document.querySelector(".line").style.width = "0vw";
+    document.getElementsByClassName("info")[0].innerText  = "Turn for " + turn;
+    document.querySelector('.imgbox').getElementsByTagName('img')[0].style.width = "0px"
+})
 
-function toggleMode() {
-    twoPlayerMode = !twoPlayerMode;
-    resetGame();
-    document.getElementById('toggleMode').innerText = twoPlayerMode ? 'Switch to AI Mode' : 'Switch to Two-Player Mode';
-}
-
-// Dynamically generate the game board
-const boardContainer = document.getElementById('board');
-for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.id = `cell-${i}`;
-    cell.addEventListener('click', () => handleCellClick(i));
-    boardContainer.appendChild(cell);
-}
